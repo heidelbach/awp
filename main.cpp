@@ -1,8 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "roll_dice.h"
+#include "index.h"
 
 int requestCount(char *const question)
 {
@@ -28,6 +29,8 @@ enum parse_state
     INIT, MINUS, ERROR
 };
 
+
+
 void print_table(int *const *const results, int const player)
 {
     printf(" \\ ");
@@ -43,7 +46,7 @@ void print_table(int *const *const results, int const player)
     printf("-----\n");
     for (int i = 1; i <= 6; ++i)
     {
-        printf("%d |", i); 
+        printf("%d |", i);
         for (int i_player = 0; i_player < player; ++i_player)
         {
             printf("%3d ", results[i][i_player]);
@@ -58,17 +61,18 @@ void print_table(int *const *const results, int const player)
     printf("+-----\nS |");
     for (int i_player = 0; i_player < player; ++i_player)
     {
-        printf("%3d ", results[0][i_player]); 
+        printf("%3d ", results[0][i_player]);
     }
     printf("| ####\n\n");
 }
 
-int main(int argc, char *const *argv) 
+int main(int argc, char *const *argv)
 {
     int player = -1;
-    int rolls = -1;    
+    int rolls = -1;
     // save results 1-6 at indices 1-6, sum at index 0
     int *results[7];
+    Index<int> *index;
 
     // special source for randomness on linux
     unsigned char use_dev_rand = 1;
@@ -88,7 +92,7 @@ int main(int argc, char *const *argv)
             switch (state)
             {
                 case INIT:
-                    if (arg[0] == '-') 
+                    if (arg[0] == '-')
                     {
                         state = MINUS;
                         ++arg;
@@ -105,7 +109,7 @@ int main(int argc, char *const *argv)
                     {
                         case 'h':
                             fprintf(stderr, "[-r|-R] [-n <rolls>] [-p <player>]\n");
-                            fprintf(stderr, "%s\n%s\n%s\n", 
+                            fprintf(stderr, "%s\n%s\n%s\n",
                                     "-R enables use of /dev/random\n   This is the default case\n",
                                     "-r disables use of /dev/random\n",
                                     "-v prints more details\n");
@@ -122,7 +126,7 @@ int main(int argc, char *const *argv)
                                 fprintf(stderr, "Invalid argument %s\n",
                                         *argv);
                                 state = ERROR;
-                            } 
+                            }
                             arg = NULL;
                             break;
                         case 'r':
@@ -141,7 +145,7 @@ int main(int argc, char *const *argv)
                                 fprintf(stderr, "Invalid argument %s\n",
                                         *argv);
                                 state = ERROR;
-                            } 
+                            }
                             arg = NULL;
                             break;
                         default:
@@ -194,18 +198,19 @@ int main(int argc, char *const *argv)
     if (rolls < 0)
         rolls = requestCount("Wieviele Wuerfe pro Spieler");
     roll_dice_init();
+    index = new Index<int>(player, rolls);
 
     // allocate memory
     for (int i = 0; i <= 6; ++i)
     {
         // reserve space for <player> players and last row for the sum
         results[i] = (int *) malloc(sizeof (int) * (player + 1));
-        if (!results[i]) 
+        if (!results[i])
         {
             fprintf(stderr, "Out of memory\nAborted\n");
             return 2;
         }
-        
+
         // initialize allocated memory
         // memset(results[i], 0, sizeof(int) * (player + 1));
         // for (int j = 0; j < player; ++j)
@@ -223,13 +228,14 @@ int main(int argc, char *const *argv)
 
     // throw the dice
     for (int i = 0; i < rolls; ++i)
-    {   
+    {
         for (int i_player = 0; i_player < player; ++i_player)
         {
             int result = roll_dice(use_dev_rand);
             ++results[result][i_player]; // register for invidual player
             ++results[result][player]; // register for sum per result
             ++results[0][i_player]; // register for sum per player
+            index->add(i_player, result);
         }
         if (verbose) {
             printf("\nNach %d Wuerfen\n", i + 1);
@@ -238,13 +244,25 @@ int main(int argc, char *const *argv)
     }
 
     // print results
+    printf("\r");
+    for (int i_player = 1; i_player <= player ; ++i_player)
+    {
+        printf("Spieler %2d:%2d", i_player, index->get(i_player - 1, 0));
+        for (int i = 1; i < rolls; ++i) {
+
+            printf("%s%2d", i % 20 == 0 ? "\n           "
+                    : ",", index->get(i_player - 1, i));
+        }
+        printf("\n");
+    }
     printf("\nErgebnisse fuer %d Versuche\n\n", rolls);
     print_table(results, player);
-    
+
     // free allocated memory
     for (int i = 0; i <= 6; ++i)
     {
         free(results[i]);
     }
+    delete index;
     return 0;
 }

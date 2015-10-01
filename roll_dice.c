@@ -34,7 +34,7 @@ unsigned short roll_dices(unsigned char use_dev_rand, unsigned short max, unsign
         {
             FILE *dev_rand = fopen("/dev/random", "r");
             int entropy_avail = ent_avail();
-            if (entropy_avail)
+            if (entropy_avail < 1000)
             {
                 while (entropy_avail < 1000)
                 {
@@ -56,6 +56,7 @@ unsigned short roll_dices(unsigned char use_dev_rand, unsigned short max, unsign
                 }
                 rand_byte = (rand_byte << 8) | (0xffff & rand_byte_i);
             }
+            fclose(dev_rand);
         } else
 #endif
             rand_byte = rand();
