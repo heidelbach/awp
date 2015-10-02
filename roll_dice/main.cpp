@@ -11,7 +11,7 @@ int requestCount(char *const question)
     while (1)
     {
         printf("%s: ", question);
-        fflush(stdin);
+        fflush(stdout);
         if (scanf("%d", &ret) > 0)
         {
             if (ret < 0)
@@ -24,60 +24,34 @@ int requestCount(char *const question)
     }
 }
 
+char *requestName(char *const question)
+{
+    char buffer[1024];
+    char *ret;
+    printf("%s: ", question);
+    fflush(stdout);
+    scanf("%1023s", buffer);
+    ret = (char *) malloc(sizeof(char) * (strlen(buffer) + 1));
+    memcpy(ret, buffer, sizeof(char) * (strlen(buffer) + 1));
+    return ret;
+}
+
 enum parse_state
 {
     INIT, MINUS, ERROR
 };
-
-
-
-void print_table(int *const *const results, int const player)
-{
-    printf(" \\ ");
-    for (int i_player = 0; i_player < player; ++i_player)
-    {
-        printf("%3d ", i_player + 1);
-    }
-    printf("| sum\n  \\");
-    for (int i_player = 0; i_player < player; ++i_player)
-    {
-        printf("----");
-    }
-    printf("-----\n");
-    for (int i = 1; i <= 6; ++i)
-    {
-        printf("%d |", i);
-        for (int i_player = 0; i_player < player; ++i_player)
-        {
-            printf("%3d ", results[i][i_player]);
-        }
-        printf("| %4d\n", results[i][player]);
-    }
-    printf("--+");
-    for (int i_player = 0; i_player < player; ++i_player)
-    {
-        printf("----");
-    }
-    printf("+-----\nS |");
-    for (int i_player = 0; i_player < player; ++i_player)
-    {
-        printf("%3d ", results[0][i_player]);
-    }
-    printf("| ####\n\n");
-}
 
 int main(int argc, char *const *argv)
 {
     int player = -1;
     int rolls = -1;
     // save results 1-6 at indices 1-6, sum at index 0
-    int *results[7];
-    Index<int> *index;
+    Index *index;
 
     // special source for randomness on linux
     unsigned char use_dev_rand = 1;
     unsigned char verbose = 0;
-
+    
     // parse argv
     enum parse_state state = INIT;
     while (*(++argv) != NULL)
@@ -198,33 +172,21 @@ int main(int argc, char *const *argv)
     if (rolls < 0)
         rolls = requestCount("Wieviele Wuerfe pro Spieler");
     roll_dice_init();
-    index = new Index<int>(player, rolls);
 
-    // allocate memory
-    for (int i = 0; i <= 6; ++i)
+
+    // request names for players
     {
-        // reserve space for <player> players and last row for the sum
-        results[i] = (int *) malloc(sizeof (int) * (player + 1));
-        if (!results[i])
+        char **names = (char **) malloc(sizeof(char *) * player);
+        char question[] = { "Name fuer Spieler XX" };
+        for (int i = 0; i < player; ++i)
         {
-            fprintf(stderr, "Out of memory\nAborted\n");
-            return 2;
+            sprintf(question, "Name fuer Spieler %2d", i + 1);
+            names[i] = requestName(question);
         }
 
-        // initialize allocated memory
-        // memset(results[i], 0, sizeof(int) * (player + 1));
-        // for (int j = 0; j < player; ++j)
-        //     results[i][j] = 0;
+        index = new Index(player, rolls, names);
+        free(names);
     }
-
-    // initialize allocated memory
-    for (int i = 0; i <= 6; ++i)
-    {
-        memset(results[i], 0, sizeof(int) * (player + 1));
-    }
-    // for experts why does
-    // memset((void *) results, 0, sizeof(int) * (player + 1) * 6);
-    // not work
 
     // throw the dice
     for (int i = 0; i < rolls; ++i)
@@ -232,37 +194,21 @@ int main(int argc, char *const *argv)
         for (int i_player = 0; i_player < player; ++i_player)
         {
             int result = roll_dice(use_dev_rand);
-            ++results[result][i_player]; // register for invidual player
-            ++results[result][player]; // register for sum per result
-            ++results[0][i_player]; // register for sum per player
-            index->add(i_player, result);
+            index->addRoll(i_player, i, result);
         }
         if (verbose) {
             printf("\nNach %d Wuerfen\n", i + 1);
-            print_table(results, player);
+            index->printTable();
         }
     }
 
-    // print results
-    printf("\r");
-    for (int i_player = 1; i_player <= player ; ++i_player)
-    {
-        printf("Spieler %2d:%2d", i_player, index->get(i_player - 1, 0));
-        for (int i = 1; i < rolls; ++i) {
-
-            printf("%s%2d", i % 20 == 0 ? "\n           "
-                    : ",", index->get(i_player - 1, i));
-        }
-        printf("\n");
-    }
-    printf("\nErgebnisse fuer %d Versuche\n\n", rolls);
-    print_table(results, player);
+    index->printTable();
+    printf("==============\n");
+    index->sortBySum();
+    printf("==============\n");
+    index->printTable();
 
     // free allocated memory
-    for (int i = 0; i <= 6; ++i)
-    {
-        free(results[i]);
-    }
     delete index;
     return 0;
 }
