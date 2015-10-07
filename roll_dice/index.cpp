@@ -3,15 +3,23 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <cmath>
 
-Index::Index(unsigned short numPlayers, unsigned short numRolls, char **names) :
-        sizeX_(numPlayers), sizeY_(numRolls), minResult_(1), maxResult_(6) 
+Index::Index(unsigned short numPlayers, unsigned short numRolls,
+        char **names, unsigned short min, unsigned short max) :
+        sizeX_(numPlayers), sizeY_(numRolls), minResult_(1), maxResult_(max)
 {
+    if (min > max)
+    {
+        fprintf(stderr, "\rERROR on initializing Index\n"
+                "min > max\n");
+        abort();
+    }
     size_t size = sizeof(struct T_Player);
     size *= numPlayers;
     container_ = (struct T_Player *) malloc(size);
     memset(container_, 0,size);
-    for (int i = 0; i < numPlayers; ++i) 
+    for (int i = 0; i < numPlayers; ++i)
     {
         container_[i].name = (char *) malloc(sizeof(char) * (strlen(names[i] + 1)));
         memcpy(container_[i].name, names[i], sizeof(char) * (strlen(names[i]) + 1));
@@ -25,7 +33,7 @@ Index::Index(unsigned short numPlayers, unsigned short numRolls, char **names) :
 
 Index::~Index()
 {
-    for (int i = 0; i < sizeX_; ++i) 
+    for (int i = 0; i < sizeX_; ++i)
     {
         free(container_[i].name);
         free(container_[i].results);
@@ -81,48 +89,72 @@ char *Index::name(unsigned short player)
     return container_[player].name;
 }
 
-void Index::printTable()
+void Index::printResults()
 {
-    printf("\r");
+    printf("pos  id  name\n");
+
     for (int player = 0; player < sizeX_; ++player)
     {
-        printf("%-2d: %-30s\n", container_[player].rank, container_[player].name);
+        printf("%-3d (%2d): %-30s\n", container_[player].rank,
+                container_[player].idx,
+                container_[player].name);
         for (int roll = 0; roll < sizeY_; ++roll)
         {
             printf("%s%d", roll == 0 ? " " : roll % 20 == 0 ? "\n " : ",",
                 container_[player].results[roll]);
         }
-        printf("\n");
+        printf("\n \033[41;38mtotal: %d\033[0m\n\n", container_[player].sum);
     }
-    printf("\n \\ ");
+}
+
+void Index::printTable()
+{
+    int const digits = (int)(log(maxResult_) / log(10)) + 1;
+    char padding[32];
+
+    sprintf(padding, "%%%ds", digits);
+    printf(padding, "");
+    printf("\\ ");
     for (int player = 0; player < sizeX_; ++player)
     {
-        printf("%3d ", container_[player].idx);
-    }
-    printf("|\n  \\");
-    for (int player = 0; player < sizeX_; ++player)
-    {
-        printf("----");
+        printf("%4d ", container_[player].idx);
     }
     printf("|\n");
+
+    printf(padding, "");
+    printf(" \\");
+
+    for (int player = 0; player < sizeX_; ++player)
+    {
+        printf("-----");
+    }
+    printf("|\n");
+
+    sprintf(padding, "%%%dd |", digits);
     for (int result = minResult_, offset = 0; result <= maxResult_; ++offset, ++result)
     {
-        printf("%d |", result);
+        printf(padding, result);
         for (int player = 0; player < sizeX_; ++player)
         {
-            printf("%3d ", container_[player].count[offset]);
+            printf("%4d ", container_[player].count[offset]);
         }
         printf("|\n");
     }
-    printf("--+");
+    for (int i = 0; i < digits; ++i)
+        printf("-");
+    printf("-+");
     for (int player = 0; player < sizeX_; ++player)
     {
-        printf("----");
+        printf("-----");
     }
-    printf("|\nS |");
+    printf("|\n");
+
+    sprintf(padding, "%%%ds |", digits);
+    printf(padding, "S");
+
     for (int player = 0; player < sizeX_; ++player)
     {
-        printf("%3d ", container_[player].sum);
+        printf("%4d ", container_[player].sum);
     }
     printf("|\n\n");
 }
@@ -183,7 +215,7 @@ void Index::sortBySum()
     {
         if (i == 0)
             container_[0].rank = 1;
-        else 
+        else
             if (container_[i - 1].sum != container_[i].sum)
                 container_[i].rank = i + 1;
             else

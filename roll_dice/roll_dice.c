@@ -24,7 +24,7 @@ int ent_avail()
 #define RNG_MAX 0xffffffff
 #define NUM_BYTES_PER_INT 8
 
-unsigned short roll_dices(unsigned char use_dev_rand, unsigned short max, unsigned short min)
+unsigned short roll_dice(unsigned char use_dev_rand, unsigned short max, unsigned short min)
 {
     unsigned int rand_byte;
     while (1)
@@ -38,12 +38,12 @@ unsigned short roll_dices(unsigned char use_dev_rand, unsigned short max, unsign
             {
                 while (entropy_avail < 1000)
                 {
-                    printf("\rentropy avail: %4d - Please wait", entropy_avail);
-                    fflush(stdout);
+                    fprintf(stderr, "\rentropy avail: %4d - Please wait", entropy_avail);
+                    fflush(stderr);
                     system("sleep 0.1");
                     entropy_avail = ent_avail();
                 }
-                printf("\r                                 ");
+                fprintf(stderr, "\r                                 ");
             }
             rand_byte = 0;
             for (int i = 0; i < NUM_BYTES_PER_INT / 2; ++i)

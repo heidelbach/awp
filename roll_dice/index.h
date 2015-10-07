@@ -29,7 +29,8 @@ private:
     void sortBySum_(signed int, signed int);
 
 public:
-    Index(unsigned short numPlayers, unsigned short numRolls, char **names);
+    Index(unsigned short numPlayers, unsigned short numRolls, char **names,
+            unsigned short min, unsigned short max);
 
     ~Index();
 
@@ -40,6 +41,8 @@ public:
     char *name(unsigned short player);
 
     void printTable();
+
+    void printResults();
 
     void sortBySum();
 
