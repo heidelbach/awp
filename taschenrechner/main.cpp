@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+
+#include "io.h"
+#include "math.h"
 /*
  * Author: Johannes Heidelbach
  *

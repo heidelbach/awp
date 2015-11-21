@@ -70,7 +70,7 @@ static unsigned int getHeight(unsigned int mode)
 		return 0;
 	while(1) {
 		printf("Hoehe des Baums (%d - %d): ", min, max);
-		if (scanf_s("%d", &value) < 0) {
+		if (scanf("%d", &value) < 0) {
 			// stdin closed
 			return 0;
 		}

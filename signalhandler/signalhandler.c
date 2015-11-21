@@ -1,7 +1,8 @@
 
-#include <signal.h> // sigaction(int, struct sigaction *, struct sigaction *), struct sigaction, Makros für Signale
-#include <stdio.h> // fprintf(int, char *...), printf(char *...)
-#include <unistd.h> // int pause(void)
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 struct sigaction actionNew;
 

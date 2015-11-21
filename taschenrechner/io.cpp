@@ -7,12 +7,10 @@ template<typename T>
 static T read(char const *const message)
 {
 	T in;
-	
 	std::cout << message;
 	std::cout.flush();
 
 	std::cin >> in;
-	
 	return in;
 }
 
