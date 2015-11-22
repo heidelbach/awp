@@ -1,0 +1,64 @@
+Eingabe -> Ausgabe
+
+Kalender
+============
+a) Wochentagsnummer -> Name des Wochentags
+
+b) Millisekunden seit 1970 -> X - Ausgabe des aktuellen Datums
+
+c) Millisekunden seit 1970, Tage -> X - Ausgabe des Datums Tage davor (-) bzw danach (+)
+
+d) Jahr, Monat -> Anzahl der Tage
+
+e) Wochentag, Länge des Monats -> X - Ausgabe des Monats, Beispielausgabe:
+Mo Di Mi Do Fr Sa So
+       1  2  3  4  5
+ 6  7  8  9 10 11 12
+13 14 15 16 17 18 19
+20 21 22 23 24 25 26
+27 28 29 30
+
+f) Wochentag, Monat, Jahr -> X - Ausgabe wie Aufgabe davor
+
+g) Array mit Feiertagen, Wochentag, Monat, Jahr -> X - Ausgabe wie zuvor, farbige Hervorhebung von Sonn- und Feiertagen
+
+Farbcodierung
+=============
+a) HTML-Farbcode (numerisch) -> X - Ausgabe 
+Beispiel Ausgabe:
+R: 172
+G: 26
+B: 0
+
+b) HTML-Farbcode (als char array) -> X - Ausgabe wie zuvor
+
+Spiel
+============
+a) TicTacToe
+
+b) Stein-Schere-Papier
+
+c) Solitär SCHWER!
+
+Segmentanzeige
+============
+Benennung der Segmente wie folgt:
+
+        f
+  _   a  e
+ |_|    g
+ |_|  b  d
+       c
+
+im Array:
+- g f e d c b a
+7 6 5 4 3 2 1 0
+
+a) Ziffer -> Setzte das Array, damit die Ziffer angezeigt wird
+b) Uhrzeit in Millisekunden -> X - Schalten der jeweils 2 Segmente für Stunde, Minute, Sekunde
+
+Sonstige
+============
+a) Umwandlung Zahlen zwischen Hexadezimal, Binär und Dezimalsystem
+a1) zusätzlich Oktalsystem
+a2) in Systeme mit beliebiger Basis
