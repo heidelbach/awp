@@ -79,8 +79,12 @@ int main(int argc, char *const *argv)
 
     // special source for randomness on linux
     unsigned char use_dev_rand = 1;
+    // print interim results
     unsigned char verbose = 0;
-
+    // allow duplicate results
+    unsigned char duplicates = 1;
+    // sort by sum
+    unsigned char sort = 1;
 
     unsigned short max = 6;
 
@@ -115,15 +119,20 @@ int main(int argc, char *const *argv)
                     switch (arg[0])
                     {
                         case 'h':
-                            fprintf(stderr, "[-r|-R] [-n <rolls>] [-p <player>] [-M <max>]\n");
-                            fprintf(stderr, "%s\n%s\n%s\n%s\n",
+                            fprintf(stderr, "[-r|-R] [-D] [-v] [-n <rolls>] [-p <player>] [-M <max>]\n");
+                            fprintf(stderr, "%s\n%s\n%s\n%s\n%s\n",
                                     "-R enables use of /dev/random\n   This is the default case\n",
                                     "-r disables use of /dev/random\n",
+                                    "-D disables duplicate results\n",
                                     "-v prints more details\n",
                                     "-M changes maxmimum");
                             return 0;
                         case 'v':
                             verbose = 1;
+                            ++arg;
+                            break;
+                        case 'D':
+                            duplicates = 0;
                             ++arg;
                             break;
                         case 'M':
@@ -156,6 +165,10 @@ int main(int argc, char *const *argv)
                             use_dev_rand = 1;
                             ++arg;
                             break;
+                        case 'S':
+                            sort = 0;
+                            ++arg;
+                            break;
                         case 'n':
                             parse_flags.rolls_count = 1;
                             ++arg;
@@ -168,7 +181,7 @@ int main(int argc, char *const *argv)
                             arg = NULL;
                             break;
                         default:
-                            fprintf(stderr, "Unknown arg %s (!= n)\n", *argv);
+                            fprintf(stderr, "Unknown arg %s\n", *argv);
                             arg = NULL;
                             state = ERROR;
                     }
@@ -227,6 +240,12 @@ int main(int argc, char *const *argv)
         player = requestCount("Wieviele Spieler sollen mitspielen");
     if (rolls < 0)
         rolls = requestCount("Wieviele Wuerfe pro Spieler");
+    if (!duplicates && rolls >= max)
+    {
+        fprintf(stderr, "Error: Duplicates disabled and max < rolls\n");
+        exit(1);
+    }
+
     roll_dice_init();
 
 
@@ -249,8 +268,12 @@ int main(int argc, char *const *argv)
     {
         for (int i_player = 0; i_player < player; ++i_player)
         {
-            int result = roll_dice(use_dev_rand, max);
-            index->addRoll(i_player, i, result);
+            while (1)
+            {
+                int result = roll_dice(use_dev_rand, max);
+                if (index->addRoll(i_player, i, result, duplicates == 0))
+                    break;
+            }
         }
         if (verbose) {
             printf("\nNach %d Wuerfen\n\033[0;33m", i + 1);
@@ -260,12 +283,15 @@ int main(int argc, char *const *argv)
     }
 
     index->printResults();
-    printf("========================\n");
-    printf("          SORT          \n");
-    index->sortBySum();
-    printf("========================\n");
-    index->printTable();
-    index->printResults();
+    if (sort)
+    {
+        printf("========================\n");
+        printf("          SORT          \n");
+        index->sortBySum();
+        printf("========================\n");
+        index->printTable();
+        index->printResults();
+    }
 
     // free allocated memory
     delete index;

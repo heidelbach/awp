@@ -42,7 +42,8 @@ Index::~Index()
     free(container_);
 }
 
-void Index::addRoll(unsigned short player, unsigned short pos, int roll)
+bool Index::addRoll(unsigned short player, unsigned short pos, int roll,
+        bool unique)
 {
     if (player < 0 || player >=sizeX_)
     {
@@ -59,9 +60,17 @@ void Index::addRoll(unsigned short player, unsigned short pos, int roll)
         fprintf(stderr, "Index::get(index, pos)\nInvalid roll: %d\n", roll);
         abort();
     }
-    container_[player].results[pos] = roll;
-    ++container_[player].count[roll - minResult_];
-    container_[player].sum += roll;
+    struct T_Player *const player_ = &container_[player];
+    int *const result = &(player_->count[roll - minResult_]);
+    if (unique && *result != 0)
+    {
+        // refuse add result already counted
+        return false;
+    }
+    ++(*result);
+    player_->results[pos] = roll;
+    player_->sum += roll;
+    return true;
 }
 
 int Index::getRoll(unsigned short player, unsigned short pos)
@@ -91,7 +100,7 @@ char *Index::name(unsigned short player)
 
 void Index::printResults()
 {
-    printf("pos  id  name\n");
+    printf("%-30s\n", "pos  id  name");
 
     for (int player = 0; player < sizeX_; ++player)
     {
@@ -176,7 +185,7 @@ unsigned short Index::getIdx(unsigned short player)
         fprintf(stderr, "Index::getIdx()\nInvalid player: %d\n", player);
         abort();
     }
-    return container_[player].idx;;
+    return container_[player].idx;
 }
 
 void Index::swap(signed int a, signed int b)

@@ -34,7 +34,8 @@ public:
 
     ~Index();
 
-    void addRoll(unsigned short player, unsigned short pos, int result);
+    bool addRoll(unsigned short player, unsigned short pos, int result,
+            bool unique = false);
 
     int getRoll(unsigned short player, unsigned short pos);
 

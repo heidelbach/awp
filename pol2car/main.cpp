@@ -2,8 +2,8 @@
 #include <cstdio>
 #include <cmath>
 
-void car2pol(double x, double y, double &r, double &alpha);
-void pol2car(double r, double alpha, double &x, double &y);
+void car2pol(float x, float y, float &r, float &alpha);
+void pol2car(float r, float alpha, float &x, float &y);
 
 int main()
 {
@@ -12,7 +12,7 @@ int main()
 	while (ende)
 	{
 		
-		double x= 0, y = 0, r = 0, alpha = 0;
+		float x= 0, y = 0, r = 0, alpha = 0;
 		if (!auswahl)
 		{
 			printf("Menue\n");
@@ -26,22 +26,22 @@ int main()
 		{
 		case '1':
 			printf("Bitte x eingeben: ");
-			scanf("%Lf", &x);
+			scanf("%f", &x);
 			printf("Bitte y eingeben: ");
-			scanf("%Lf", &y);
+			scanf("%f", &y);
 			car2pol(x, y, r, alpha);
-			printf("r    : %Lf\n", r);
-			printf("alpha: %Lf\n", alpha);
+			printf("r    : %f\n", r);
+			printf("alpha: %f\n", alpha);
 			break;
 
 		case '2':
 			printf("Bitte r eingeben: ");
-			scanf("%Lf", &r);
+			scanf("%f", &r);
 			printf("Bitte alpha eingeben: ");
-			scanf("%Lf", &alpha);
+			scanf("%f", &alpha);
 			pol2car(r, alpha, x, y);
-			printf("x    : %Lf\n", x);
-			printf("y    : %Lf\n", y);
+			printf("x    : %f\n", x);
+			printf("y    : %f\n", y);
 			break;
 		
 		case '0':
@@ -58,7 +58,7 @@ int main()
 	}
 }
 
-void car2pol(double x, double y, double &r, double &alpha)
+void car2pol(float x, float y, float &r, float &alpha)
 {
 	r = sqrt(x * x + y * y);
 	if (y == 0)
@@ -66,7 +66,7 @@ void car2pol(double x, double y, double &r, double &alpha)
 	else
 		alpha = atan(y / x) * 180 / 3.1415;
 }
-void pol2car(double r, double alpha, double &x, double &y)
+void pol2car(float r, float alpha, float &x, float &y)
 {
 	x = r * cos(alpha * 3.1415 / 180.0);
 	y = r * sin(alpha * 3.1415 / 180.0);
