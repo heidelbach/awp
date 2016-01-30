@@ -3,9 +3,18 @@
  *
  * implementiert sortierung
  */
+#define MAX_THREADS 512
+#define QSORT_TO_BUBBLESORT 32
 
 #include <cstring> // memcpy
 #include <cstdlib> // malloc, free
+
+#include <mutex>
+#include <pthread.h>
+
+std::mutex tctl;
+volatile signed int thread_count = 0;
+
 
 static void swap(void *const a, void *const b, unsigned int const size)
 {
@@ -42,6 +51,15 @@ static void bubblesort(void *const a, unsigned int const size, unsigned int limi
 	}
 }
 
+struct quicksort_args
+{
+  void *a;
+  unsigned int size;
+  unsigned int count;
+  signed int (*cmp)(void *, void *);
+};
+
+static void *quicksort_child(void *const args);
 
 static void quicksort(void *const a, unsigned int const size, unsigned int const count,
 		signed int (*cmp)(void *, void *))
@@ -50,7 +68,7 @@ static void quicksort(void *const a, unsigned int const size, unsigned int const
 	{
 		// basic case: one element
 	}
-	else if (count < 24)
+	else if (count < QSORT_TO_BUBBLESORT)
 		bubblesort(a, size, count, cmp);
 	else
 	{
@@ -78,10 +96,62 @@ static void quicksort(void *const a, unsigned int const size, unsigned int const
 		nextAfterPivot = (void *)(((unsigned long) a) + (ptrW + 1) * size);
 		swap(a, pivot, size);
 
+    int do_fork;
+    tctl.lock();
+    if ( do_fork = (thread_count < MAX_THREADS) )
+    {
+      ++thread_count;
+    }
+    tctl.unlock();
+
+    if (do_fork) 
+    {
+      pthread_t thread;
+
+      // args for child
+      quicksort_args *q_args=(quicksort_args *)malloc(sizeof (quicksort_args));
+      q_args->a = nextAfterPivot;
+      q_args->size = size;
+      q_args->count = count - ptrW - 1;
+      q_args->cmp = cmp;
+
+      // create child
+      if (pthread_create(&thread, NULL, quicksort_child, q_args))
+      {
+        // error creating child
+        free(q_args);
+        tctl.lock();
+        --thread_count;
+        tctl.unlock();
+      }
+      else
+      {
+      // do own work
+      quicksort(a, size, ptrW, cmp);
+
+      // wait for child
+      pthread_join(thread, NULL);
+      tctl.lock();
+      --thread_count;
+      tctl.unlock();
+      return;
+      }
+    }
+
+    // fall back, sort both partitions
 		quicksort(a, size, ptrW, cmp);
 		quicksort(nextAfterPivot, size, count - ptrW - 1, cmp);
 	}
 }
+
+static void *quicksort_child(void *const args)
+{
+  quicksort_args *q_args = (quicksort_args *)args;
+  quicksort(q_args->a, q_args->size, q_args->count, q_args->cmp);
+  free(q_args);
+  return NULL;
+}
+
 
 void sort(void *const array, unsigned int size, unsigned int count, signed int (*cmp)(void *, void *))
 {
