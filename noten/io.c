@@ -18,7 +18,7 @@ signed int getInt()
 double getFloat()
 {
   double d;
-  scanf("%d", &d);
+  scanf("%lf", &d);
   return d;
 }
 

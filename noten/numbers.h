@@ -7,9 +7,17 @@
  */
 signed int toInt(char const *);
 
+
+void sortInt(unsigned int count, signed int *const array);
+
 /**
  * Gibt integer array mit count elementen aus
  */
-void print(unsigned int const count, signed int *const array);
+void print_array(unsigned int const count, signed int *const array);
+
+/**
+ * Zeigt werte als Histogramm an
+ */
+void display_array(unsigned int const count, signed int *const array);
 
 #endif
